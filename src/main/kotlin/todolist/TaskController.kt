@@ -1,16 +1,26 @@
 package todolist
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import spark.Request
 import spark.Response
 import spark.Route
+import spark.Spark.halt
 
-class TaskController {
-    fun index(): Route = object : Route {
-        override fun handle(request: Request?, response: Response?): Any =
-                //ダミーデータを返す
-                listOf(
-                        Task(1,"クリーニングに出す",false),
-                        Task(2,"住民票を取得する",true)
-                )
+class TaskController(private val objectMapper: ObjectMapper,
+                     private val taskRepository: TaskRepository) {
+    fun index(): Route = Route {request, response ->
+        taskRepository.findAll()
+    }
+
+    fun create(): Route = Route { request, response ->
+        val request: TaskCreateRequest =
+                try {
+                    objectMapper.readValue(request.bodyAsBytes(), TaskCreateRequest::class.java)
+                } catch (e: Exception) {
+                    throw halt(400)
+                }
+        val task = taskRepository.create(request.content)
+        response.status(200)
+        task
     }
 }
