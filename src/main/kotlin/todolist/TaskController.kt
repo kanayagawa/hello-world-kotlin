@@ -22,7 +22,18 @@ class TaskController(private val objectMapper: ObjectMapper,
     }
 
     fun show(): Route = Route { request, response ->
-        val id = request.params("id").toLongOrNull()
-        id?.let(taskRepository::findById) ?: throw halt(404)
+        request.task ?: throw halt(404)
     }
+
+    fun destroy(): Route = Route { request, response ->
+        val task = request.task ?: throw halt(404)
+        taskRepository.delete(task)
+        response.status(204)
+    }
+
+    private val Request.task: Task?
+        get() {
+            val id = params("id").toLongOrNull()
+            return id?.let ( taskRepository::findById )
+        }
 }
