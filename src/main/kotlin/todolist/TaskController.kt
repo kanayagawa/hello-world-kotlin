@@ -9,26 +9,38 @@ import spark.Spark.halt
 class TaskController(private val objectMapper: ObjectMapper,
                      private val taskRepository: TaskRepository) {
 
-    fun index(): Route = Route {request, response ->
+    fun index(): Route = Route {req, res ->
         taskRepository.findAll()
     }
 
-    fun create(): Route = Route { request, response ->
+    fun create(): Route = Route { req, res ->
         val request: TaskCreateRequest =
-            objectMapper.readValue(request.bodyAsBytes()) ?: throw halt(400)
+            objectMapper.readValue(req.bodyAsBytes()) ?: throw halt(400)
         val task = taskRepository.create(request.content)
-        response.status(201)
+        res.status(201)
         task
     }
 
-    fun show(): Route = Route { request, response ->
-        request.task ?: throw halt(404)
+    fun show(): Route = Route { req, res ->
+        req.task ?: throw halt(404)
     }
 
-    fun destroy(): Route = Route { request, response ->
-        val task = request.task ?: throw halt(404)
+    fun destroy(): Route = Route { req, res ->
+        val task = req.task ?: throw halt(404)
         taskRepository.delete(task)
-        response.status(204)
+        res.status(204)
+    }
+
+    fun update(): Route = Route { req, res ->
+        val request: TaskUpdateRequest =
+                objectMapper.readValue(req.bodyAsBytes()) ?: throw halt(400)
+        val task = req.task ?: throw halt(404)
+        val newTask = task.copy(
+                content = request.content ?: task.content,
+                done = request.done ?: task.done
+        )
+        taskRepository.update(newTask)
+        res.status(204)
     }
 
     private val Request.task: Task?
