@@ -12,4 +12,5 @@ fun main(args: Array<String>) {
     val taskController = TaskController(objectMapper,taskRepository)
     get("/tasks", taskController.index(), jsonTransformer)
     post("/tasks", taskController.create(),jsonTransformer)
+    get("/tasks/:id", taskController.show(), jsonTransformer)
 }
